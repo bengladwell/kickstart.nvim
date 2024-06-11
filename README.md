@@ -27,6 +27,8 @@ External Requirements:
 - Clipboard tool (xclip/xsel/win32yank or other depending on platform)
 - A [Nerd Font](https://www.nerdfonts.com/): optional, provides various icons
   - if you have it set `vim.g.have_nerd_font` in `init.lua` to true
+  - **Using JetBrains Mono NFM (Regular 13)**
+  - **brew install font-jetbrains-mono-nerd-font**
 - Language Setup:
   - If want to write Typescript, you need `npm`
   - If want to write Golang, you will need `go`

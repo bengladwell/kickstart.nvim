@@ -90,8 +90,9 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+-- Using JetBrains Mono NFM (Regular 13)
+-- brew install font-jetbrains-mono-nerd-font
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -102,7 +103,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -113,7 +114,7 @@ vim.opt.showmode = false
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
+-- vim.opt.clipboard = 'unnamedplus'
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -122,8 +123,8 @@ vim.opt.breakindent = true
 vim.opt.undofile = true
 
 -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term
-vim.opt.ignorecase = true
-vim.opt.smartcase = true
+-- vim.opt.ignorecase = true
+-- vim.opt.smartcase = true
 
 -- Keep signcolumn on by default
 vim.opt.signcolumn = 'yes'
@@ -190,6 +191,10 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+vim.keymap.set('n', '<leader>v', '<C-w>v', { desc = 'Split window [V]ertically' })
+vim.keymap.set('n', '<leader>2', ':set ts=2 sw=2 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 2' })
+vim.keymap.set('n', '<leader>4', ':set ts=4 sw=4 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 4' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -213,6 +218,13 @@ if not vim.loop.fs_stat(lazypath) then
 end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
+-- Check if a local .vimrc exists in the current directory and source it
+local local_config = vim.fn.getcwd() .. '/.vimrc'
+
+if vim.fn.filereadable(local_config) == 1 then
+  vim.cmd('source ' .. local_config)
+end
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -225,6 +237,14 @@ vim.opt.rtp:prepend(lazypath)
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  'github/copilot.vim',
+  'tpope/vim-dadbod',
+  {
+    'tpope/vim-rhubarb',
+    dependencies = { 'tpope/vim-fugitive' },
+  },
+  'tpope/vim-dispatch',
+  'slim-template/vim-slim',
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
@@ -415,6 +435,7 @@ require('lazy').setup({
       { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
+      'ray-x/lsp_signature.nvim',
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
@@ -452,7 +473,7 @@ require('lazy').setup({
 
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
-      --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
+      --    a lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
@@ -469,7 +490,10 @@ require('lazy').setup({
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          vim.keymap.set('n', 'gd', function()
+            require('telescope.builtin').lsp_definitions { jump_type = 'tab' }
+          end, { buffer = event.buf, desc = 'LSP: [G]oto [D]efinition' })
 
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -505,7 +529,8 @@ require('lazy').setup({
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          map('gD', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -545,6 +570,8 @@ require('lazy').setup({
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
             end, '[T]oggle Inlay [H]ints')
           end
+
+          require('lsp_signature').on_attach({}, event.buf)
         end,
       })
 
@@ -567,7 +594,13 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        -- To use the proper venv, requires a pyrightconfig.json in the root of the project looking something like:
+        -- {
+        --   "venvPath": "/Users/bgladwell/.pyenv/versions/",
+        --   "venv": "astrology"
+        -- }
+
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -592,6 +625,15 @@ require('lazy').setup({
             },
           },
         },
+
+        -- Mason installs gems using the global ruby version, which causes problems. I was
+        -- not able to figure out how to make it install using the currently active rbenv
+        -- version, including a custom command for these servers that uses ~/.rbenv/shims/ruby-lsp,
+        -- rubocop, etc.
+        -- So, set the global rbenv to the same one you are developing with, or figure out something
+        -- better. E.g. `rbenv global 3.3.0`
+        solargraph = {},
+        rubocop = {},
       }
 
       -- Ensure the servers and tools above are installed
@@ -855,12 +897,37 @@ require('lazy').setup({
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup(opts)
 
+      vim.opt.foldlevel = 20
+      vim.opt.foldmethod = 'expr'
+      vim.opt.foldexpr = 'nvim_treesitter#foldexpr()'
+
       -- There are additional nvim-treesitter modules that you can use to interact
       -- with nvim-treesitter. You should go explore a few and see what interests you:
       --
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    end,
+  },
+  {
+    'Wansmer/treesj',
+    keys = { '<leader>m', '<leader>M' },
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('treesj').setup {}
+      vim.keymap.set('n', '<leader>m', require('treesj').toggle, { desc = 'Toggle [M]iniMap' })
+      vim.keymap.set('n', '<leader>M', function()
+        require('treesj').toggle { split = { recursive = true } }
+      end, { desc = 'Toggle [M]iniMap (recursive)' })
+    end,
+  },
+  {
+    'liuchengxu/vista.vim',
+    keys = {
+      { '<C-w>t', '<cmd>Vista!!<cr>', desc = 'Toggle Vista' },
+    },
+    config = function()
+      vim.g.vista_default_executive = 'nvim_lsp'
     end,
   },
 
@@ -873,12 +940,12 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
-  -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.indent_line',
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
