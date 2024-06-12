@@ -529,8 +529,9 @@ require('lazy').setup({
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
+          --  Commenting this out gives default behavior of gD, which I prefer. It seems to go to where the symbol
+          --  first appears in the file, which is usually what I want.
           -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-          map('gD', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -831,6 +832,30 @@ require('lazy').setup({
       -- You can configure highlights by doing something like:
       vim.cmd.hi 'Comment gui=none'
     end,
+    config = function()
+      local util = require 'tokyonight.util'
+      require('tokyonight').setup {
+        -- Override the default styles for the colorscheme here
+        --  See `:help tokyonight` for more information
+        on_highlights = function(hl, c)
+          hl.TabLine = {
+            fg = util.lighten(hl.TabLine.fg, 0.5),
+          }
+          hl.LineNr = {
+            fg = util.lighten(hl.LineNr.fg, 0.5),
+          }
+          hl.LineNrAbove = {
+            fg = util.lighten(hl.LineNrAbove.fg, 0.5),
+          }
+          hl.LineNrBelow = {
+            fg = util.lighten(hl.LineNrBelow.fg, 0.5),
+          }
+          hl.Comment = {
+            fg = util.lighten(hl.Comment.fg, 0.75),
+          }
+        end,
+      }
+    end,
   },
 
   -- Highlight todo, notes, etc in comments
@@ -868,6 +893,28 @@ require('lazy').setup({
       statusline.section_location = function()
         return '%2l:%-2v'
       end
+
+      local function get_tab_for_buffer(bufnr)
+        for tabnr = 1, vim.fn.tabpagenr '$' do
+          local winnr_list = vim.fn.tabpagebuflist(tabnr)
+          for _, bufn in ipairs(winnr_list) do
+            if bufn == bufnr then
+              return tabnr
+            end
+          end
+        end
+        return nil -- Return nil if the buffer is not found in any tab
+      end
+
+      require('mini.tabline').setup {
+        format = function(buf_id, label)
+          -- local tabnr = vim.api.nvim_tabpage_get_number(buf_id)
+          local tabnr = get_tab_for_buffer(buf_id)
+          return ' ' .. tabnr .. MiniTabline.default_format(buf_id, label)
+        end,
+
+        tabpage_section = 'none',
+      }
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -922,13 +969,53 @@ require('lazy').setup({
     end,
   },
   {
-    'liuchengxu/vista.vim',
-    keys = {
-      { '<C-w>t', '<cmd>Vista!!<cr>', desc = 'Toggle Vista' },
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+      'MunifTanjim/nui.nvim',
+      -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
     },
     config = function()
-      vim.g.vista_default_executive = 'nvim_lsp'
+      require('neo-tree').setup {
+        filesystem = {
+          hijack_netrw_behavior = 'open_default',
+        },
+      }
+      vim.cmd [[nnoremap \ :Neotree reveal<cr>]]
     end,
+  },
+  {
+    'goolord/alpha-nvim',
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
+    config = function()
+      require('alpha').setup(require('alpha.themes.startify').config)
+    end,
+  },
+  {
+    'folke/trouble.nvim',
+    opts = {},
+    cmd = 'Trouble',
+    keys = {
+      {
+        '<leader>xx',
+        '<cmd>Trouble diagnostics toggle<cr>',
+        desc = 'Diagnostics (Trouble)',
+      },
+      {
+        '<leader>cs',
+        '<cmd>Trouble symbols toggle focus=false<cr>',
+        desc = 'Symbols (Trouble)',
+      },
+      {
+        '<C-w>t',
+        '<cmd>Trouble symbols toggle focus=true<cr>',
+        desc = 'Symbols Focus (Trouble)',
+      },
+    },
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
