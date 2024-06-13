@@ -490,10 +490,11 @@ require('lazy').setup({
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
-          vim.keymap.set('n', 'gd', function()
-            require('telescope.builtin').lsp_definitions { jump_type = 'tab' }
-          end, { buffer = event.buf, desc = 'LSP: [G]oto [D]efinition' })
+          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          -- vim.api.nvim_set_keymap('n', '<Leader>d', ':execute "tabe+" .. vim.fn.line(".") .. " %"<CR>gT', { noremap = true, silent = true })
+          -- vim.keymap.set('n', 'gd', function()
+          --   require('telescope.builtin').lsp_definitions { jump_type = 'tab' }
+          -- end, { buffer = event.buf, desc = 'LSP: [G]oto [D]efinition' })
 
           -- Find references for the word under your cursor.
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -906,16 +907,6 @@ require('lazy').setup({
         return nil -- Return nil if the buffer is not found in any tab
       end
 
-      require('mini.tabline').setup {
-        format = function(buf_id, label)
-          -- local tabnr = vim.api.nvim_tabpage_get_number(buf_id)
-          local tabnr = get_tab_for_buffer(buf_id)
-          return ' ' .. tabnr .. MiniTabline.default_format(buf_id, label)
-        end,
-
-        tabpage_section = 'none',
-      }
-
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
@@ -1016,6 +1007,66 @@ require('lazy').setup({
         desc = 'Symbols Focus (Trouble)',
       },
     },
+  },
+  {
+    'romgrk/barbar.nvim',
+    dependencies = {
+      'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font }, -- OPTIONAL: for file icons
+    },
+    init = function()
+      vim.g.barbar_auto_setup = false
+      local map = vim.api.nvim_set_keymap
+      local opts = { noremap = true, silent = true }
+
+      -- Move to previous/next
+      map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
+      map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+      -- Re-order to previous/next
+      map('n', '<A-<>', '<Cmd>BufferMovePrevious<CR>', opts)
+      map('n', '<A->>', '<Cmd>BufferMoveNext<CR>', opts)
+      -- Goto buffer in position...
+      map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
+      map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
+      map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
+      map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
+      map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
+      map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
+      map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
+      map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
+      map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
+      map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
+      -- Pin/unpin buffer
+      map('n', '<A-p>', '<Cmd>BufferPin<CR>', opts)
+      -- Close buffer
+      map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
+      -- Wipeout buffer
+      --                 :BufferWipeout
+      -- Close commands
+      --                 :BufferCloseAllButCurrent
+      --                 :BufferCloseAllButPinned
+      --                 :BufferCloseAllButCurrentOrPinned
+      --                 :BufferCloseBuffersLeft
+      --                 :BufferCloseBuffersRight
+      -- Magic buffer-picking mode
+      map('n', '<C-p>', '<Cmd>BufferPick<CR>', opts)
+      -- Sort automatically by...
+      map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
+      map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
+      map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
+      map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
+      map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
+
+      -- Other:
+      -- :BarbarEnable - enables barbar (enabled by default)
+      -- :BarbarDisable - very bad command, should never be used
+    end,
+    opts = {
+      icons = {
+        buffer_index = true,
+      },
+    },
+    -- version = '^1.0.0', -- optional: only update when a new 1.x version is released
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
