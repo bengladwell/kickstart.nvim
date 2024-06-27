@@ -238,7 +238,23 @@ end
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   'github/copilot.vim',
-  'tpope/vim-dadbod',
+  {
+    'kristijanhusak/vim-dadbod-ui',
+    dependencies = {
+      'tpope/vim-dadbod',
+      'kristijanhusak/vim-dadbod-completion',
+    },
+    cmd = {
+      'DBUI',
+      'DBUIToggle',
+      'DBUIAddConnection',
+      'DBUIFindBuffer',
+    },
+    init = function()
+      -- Your DBUI configuration
+      vim.g.db_ui_use_nerd_fonts = vim.g.have_nerd_font
+    end,
+  },
   {
     'tpope/vim-rhubarb',
     dependencies = { 'tpope/vim-fugitive' },
@@ -378,7 +394,25 @@ require('lazy').setup({
         --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
         --   },
         -- },
-        -- pickers = {}
+        pickers = {
+          find_files = {
+            find_command = {
+              'fd',
+              '--type',
+              'f',
+              '--hidden',
+              '--follow',
+              '--exclude',
+              '.git',
+              '--search-path',
+              '.',
+              '--search-path',
+              '.scratch',
+              '--search-path',
+              '.github',
+            },
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
@@ -814,6 +848,12 @@ require('lazy').setup({
           { name = 'path' },
         },
       }
+      cmp.setup.filetype({ 'sql', 'mysql', 'plsql' }, {
+        sources = {
+          { name = 'vim-dadbod-completion' },
+          { name = 'buffer' },
+        },
+      })
     end,
   },
 
@@ -891,20 +931,11 @@ require('lazy').setup({
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       ---@diagnostic disable-next-line: duplicate-set-field
+      statusline.section_filename = function()
+        return '%f'
+      end
       statusline.section_location = function()
         return '%2l:%-2v'
-      end
-
-      local function get_tab_for_buffer(bufnr)
-        for tabnr = 1, vim.fn.tabpagenr '$' do
-          local winnr_list = vim.fn.tabpagebuflist(tabnr)
-          for _, bufn in ipairs(winnr_list) do
-            if bufn == bufnr then
-              return tabnr
-            end
-          end
-        end
-        return nil -- Return nil if the buffer is not found in any tab
       end
 
       -- ... and there is more!
@@ -960,25 +991,24 @@ require('lazy').setup({
     end,
   },
   {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
+    'nvim-tree/nvim-tree.lua',
     dependencies = {
-      'nvim-lua/plenary.nvim',
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-      'MunifTanjim/nui.nvim',
-      -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
     },
     config = function()
-      require('neo-tree').setup {
-        filesystem = {
-          hijack_netrw_behavior = 'open_default',
+      require('nvim-tree').setup {
+        disable_netrw = true,
+        hijack_netrw = true,
+        update_focused_file = {
+          enable = true,
+          update_cwd = true,
         },
       }
-      vim.cmd [[nnoremap \ :Neotree reveal<cr>]]
+      vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<Enter>', { desc = '[T]oggle [T]ree' })
     end,
   },
   {
-    'goolord/alpha-nvim',
+    'goolord/alpha-nvim', -- Greeter
     dependencies = {
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
@@ -1008,65 +1038,81 @@ require('lazy').setup({
       },
     },
   },
+  -- {
+  --   'romgrk/barbar.nvim',
+  --   dependencies = {
+  --     'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
+  --     { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font }, -- OPTIONAL: for file icons
+  --   },
+  --   init = function()
+  --     vim.g.barbar_auto_setup = false
+  --     local map = vim.api.nvim_set_keymap
+  --     local opts = { noremap = true, silent = true }
+  --
+  --     -- Move to previous/next
+  --     map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
+  --     map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+  --     -- Re-order to previous/next
+  --     map('n', '<A-<>', '<Cmd>BufferMovePrevious<CR>', opts)
+  --     map('n', '<A->>', '<Cmd>BufferMoveNext<CR>', opts)
+  --     -- Goto buffer in position...
+  --     map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
+  --     map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
+  --     map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
+  --     map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
+  --     map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
+  --     map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
+  --     map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
+  --     map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
+  --     map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
+  --     map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
+  --     -- Pin/unpin buffer
+  --     map('n', '<A-p>', '<Cmd>BufferPin<CR>', opts)
+  --     -- Close buffer
+  --     map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
+  --     -- Wipeout buffer
+  --     --                 :BufferWipeout
+  --     -- Close commands
+  --     --                 :BufferCloseAllButCurrent
+  --     --                 :BufferCloseAllButPinned
+  --     --                 :BufferCloseAllButCurrentOrPinned
+  --     --                 :BufferCloseBuffersLeft
+  --     --                 :BufferCloseBuffersRight
+  --     -- Magic buffer-picking mode
+  --     map('n', '<C-p>', '<Cmd>BufferPick<CR>', opts)
+  --     -- Sort automatically by...
+  --     map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
+  --     map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
+  --     map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
+  --     map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
+  --     map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
+  --
+  --     -- Other:
+  --     -- :BarbarEnable - enables barbar (enabled by default)
+  --     -- :BarbarDisable - very bad command, should never be used
+  --   end,
+  --   opts = {
+  --     icons = {
+  --       buffer_number = true,
+  --     },
+  --   },
+  --   -- version = '^1.0.0', -- optional: only update when a new 1.x version is released
+  -- },
   {
-    'romgrk/barbar.nvim',
+    'nanozuki/tabby.nvim',
     dependencies = {
-      'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font }, -- OPTIONAL: for file icons
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
-    init = function()
-      vim.g.barbar_auto_setup = false
+    config = function()
       local map = vim.api.nvim_set_keymap
       local opts = { noremap = true, silent = true }
-
       -- Move to previous/next
-      map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
-      map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
+      map('n', '<A-,>', ':tabp<CR>', opts)
+      map('n', '<A-.>', ':tabn<CR>', opts)
       -- Re-order to previous/next
-      map('n', '<A-<>', '<Cmd>BufferMovePrevious<CR>', opts)
-      map('n', '<A->>', '<Cmd>BufferMoveNext<CR>', opts)
-      -- Goto buffer in position...
-      map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
-      map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
-      map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
-      map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
-      map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
-      map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
-      map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
-      map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
-      map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
-      map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
-      -- Pin/unpin buffer
-      map('n', '<A-p>', '<Cmd>BufferPin<CR>', opts)
-      -- Close buffer
-      map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
-      -- Wipeout buffer
-      --                 :BufferWipeout
-      -- Close commands
-      --                 :BufferCloseAllButCurrent
-      --                 :BufferCloseAllButPinned
-      --                 :BufferCloseAllButCurrentOrPinned
-      --                 :BufferCloseBuffersLeft
-      --                 :BufferCloseBuffersRight
-      -- Magic buffer-picking mode
-      map('n', '<C-p>', '<Cmd>BufferPick<CR>', opts)
-      -- Sort automatically by...
-      map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
-      map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
-      map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
-      map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
-      map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
-
-      -- Other:
-      -- :BarbarEnable - enables barbar (enabled by default)
-      -- :BarbarDisable - very bad command, should never be used
+      map('n', '<A-<>', ':-tabmove<CR>', opts)
+      map('n', '<A->>', ':+tabmove<CR>', opts)
     end,
-    opts = {
-      icons = {
-        buffer_index = true,
-      },
-    },
-    -- version = '^1.0.0', -- optional: only update when a new 1.x version is released
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
