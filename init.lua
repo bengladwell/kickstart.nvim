@@ -195,6 +195,9 @@ vim.keymap.set('n', '<leader>v', '<C-w>v', { desc = 'Split window [V]ertically' 
 vim.keymap.set('n', '<leader>2', ':set ts=2 sw=2 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 2' })
 vim.keymap.set('n', '<leader>4', ':set ts=4 sw=4 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 4' })
 
+-- nmap <silent> <Leader>d :execute "tabe+" . line(".") . " %"<CR>gT
+vim.keymap.set('n', '<leader>d', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = 'Open file in new tab at location' })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -225,6 +228,17 @@ if vim.fn.filereadable(local_config) == 1 then
   vim.cmd('source ' .. local_config)
 end
 
+-- Remember file folds
+-- NOTE: makes sessions/views ONLY save folds
+vim.o.sessionoptions = 'folds'
+vim.cmd [[
+  augroup remember_folds
+    autocmd!
+    autocmd BufWritePost *.* mkview
+    autocmd BufWinEnter *.* silent! loadview
+  augroup END
+]]
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -238,7 +252,7 @@ end
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
   'github/copilot.vim',
-  {
+  { -- vim-dadbod-ui: Database UI
     'kristijanhusak/vim-dadbod-ui',
     dependencies = {
       'tpope/vim-dadbod',
@@ -281,7 +295,8 @@ require('lazy').setup({
   --    require('gitsigns').setup({ ... })
   --
   -- See `:help gitsigns` to understand what the configuration keys do
-  { -- Adds git related signs to the gutter, as well as utilities for managing changes
+  { -- gitsigns.nvim: git gutter symbols
+    -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
     opts = {
       signs = {
@@ -309,7 +324,7 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  { -- Useful plugin to show you pending keybinds.
+  { -- which-key: Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
     config = function() -- This is the function that runs, AFTER loading
@@ -339,7 +354,7 @@ require('lazy').setup({
   --
   -- Use the `dependencies` key to specify the dependencies of a particular plugin
 
-  { -- Fuzzy Finder (files, lsp, etc)
+  { -- telescope: Fuzzy Finder (files, lsp, etc)
     'nvim-telescope/telescope.nvim',
     event = 'VimEnter',
     branch = '0.1.x',
@@ -462,7 +477,7 @@ require('lazy').setup({
     end,
   },
 
-  { -- LSP Configuration & Plugins
+  { -- nvim-lspconfig: LSP Configuration & Plugins
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
@@ -703,7 +718,7 @@ require('lazy').setup({
     end,
   },
 
-  { -- Autoformat
+  { -- conform.nvim: Autoformat
     'stevearc/conform.nvim',
     lazy = false,
     keys = {
@@ -740,7 +755,7 @@ require('lazy').setup({
     },
   },
 
-  { -- Autocompletion
+  { -- nvim-cmp: Autocompletion
     'hrsh7th/nvim-cmp',
     event = 'InsertEnter',
     dependencies = {
@@ -857,7 +872,8 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
+  { -- tokyonight colorscheme
+    -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
     --
@@ -894,6 +910,18 @@ require('lazy').setup({
           hl.Comment = {
             fg = util.lighten(hl.Comment.fg, 0.75),
           }
+          hl.FoldColumn = {
+            fg = util.lighten(hl.FoldColumn.fg, 0.5),
+          }
+          hl.GitSignsAdd = {
+            fg = util.lighten(hl.GitSignsAdd.fg, 0.5),
+          }
+          hl.GitSignsChange = {
+            fg = util.lighten(hl.GitSignsChange.fg, 0.5),
+          }
+          hl.GitSignsDelete = {
+            fg = util.lighten(hl.GitGutterDelete.fg, 0.5),
+          }
         end,
       }
     end,
@@ -902,7 +930,7 @@ require('lazy').setup({
   -- Highlight todo, notes, etc in comments
   { 'folke/todo-comments.nvim', event = 'VimEnter', dependencies = { 'nvim-lua/plenary.nvim' }, opts = { signs = false } },
 
-  { -- Collection of various small independent plugins/modules
+  { -- mini.vim: Collection of various small independent plugins/modules
     'echasnovski/mini.nvim',
     config = function()
       -- Better Around/Inside textobjects
@@ -942,7 +970,7 @@ require('lazy').setup({
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
-  { -- Highlight, edit, and navigate code
+  { -- treesitter: Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
@@ -978,7 +1006,7 @@ require('lazy').setup({
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
   },
-  {
+  { -- treesj: Split/join blocks of code
     'Wansmer/treesj',
     keys = { '<leader>m', '<leader>M' },
     dependencies = { 'nvim-treesitter/nvim-treesitter' },
@@ -990,7 +1018,7 @@ require('lazy').setup({
       end, { desc = 'Toggle [M]iniMap (recursive)' })
     end,
   },
-  {
+  { -- nvim-tree: file explorer
     'nvim-tree/nvim-tree.lua',
     dependencies = {
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
@@ -1007,7 +1035,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<Enter>', { desc = '[T]oggle [T]ree' })
     end,
   },
-  {
+  { -- alpha-nvim: greeter page
     'goolord/alpha-nvim', -- Greeter
     dependencies = {
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
@@ -1016,7 +1044,7 @@ require('lazy').setup({
       require('alpha').setup(require('alpha.themes.startify').config)
     end,
   },
-  {
+  { -- trouble.nvim: Diagnostics in quickfix
     'folke/trouble.nvim',
     opts = {},
     cmd = 'Trouble',
@@ -1038,72 +1066,29 @@ require('lazy').setup({
       },
     },
   },
-  -- {
-  --   'romgrk/barbar.nvim',
-  --   dependencies = {
-  --     'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
-  --     { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font }, -- OPTIONAL: for file icons
-  --   },
-  --   init = function()
-  --     vim.g.barbar_auto_setup = false
-  --     local map = vim.api.nvim_set_keymap
-  --     local opts = { noremap = true, silent = true }
-  --
-  --     -- Move to previous/next
-  --     map('n', '<A-,>', '<Cmd>BufferPrevious<CR>', opts)
-  --     map('n', '<A-.>', '<Cmd>BufferNext<CR>', opts)
-  --     -- Re-order to previous/next
-  --     map('n', '<A-<>', '<Cmd>BufferMovePrevious<CR>', opts)
-  --     map('n', '<A->>', '<Cmd>BufferMoveNext<CR>', opts)
-  --     -- Goto buffer in position...
-  --     map('n', '<A-1>', '<Cmd>BufferGoto 1<CR>', opts)
-  --     map('n', '<A-2>', '<Cmd>BufferGoto 2<CR>', opts)
-  --     map('n', '<A-3>', '<Cmd>BufferGoto 3<CR>', opts)
-  --     map('n', '<A-4>', '<Cmd>BufferGoto 4<CR>', opts)
-  --     map('n', '<A-5>', '<Cmd>BufferGoto 5<CR>', opts)
-  --     map('n', '<A-6>', '<Cmd>BufferGoto 6<CR>', opts)
-  --     map('n', '<A-7>', '<Cmd>BufferGoto 7<CR>', opts)
-  --     map('n', '<A-8>', '<Cmd>BufferGoto 8<CR>', opts)
-  --     map('n', '<A-9>', '<Cmd>BufferGoto 9<CR>', opts)
-  --     map('n', '<A-0>', '<Cmd>BufferLast<CR>', opts)
-  --     -- Pin/unpin buffer
-  --     map('n', '<A-p>', '<Cmd>BufferPin<CR>', opts)
-  --     -- Close buffer
-  --     map('n', '<A-c>', '<Cmd>BufferClose<CR>', opts)
-  --     -- Wipeout buffer
-  --     --                 :BufferWipeout
-  --     -- Close commands
-  --     --                 :BufferCloseAllButCurrent
-  --     --                 :BufferCloseAllButPinned
-  --     --                 :BufferCloseAllButCurrentOrPinned
-  --     --                 :BufferCloseBuffersLeft
-  --     --                 :BufferCloseBuffersRight
-  --     -- Magic buffer-picking mode
-  --     map('n', '<C-p>', '<Cmd>BufferPick<CR>', opts)
-  --     -- Sort automatically by...
-  --     map('n', '<Space>bb', '<Cmd>BufferOrderByBufferNumber<CR>', opts)
-  --     map('n', '<Space>bn', '<Cmd>BufferOrderByName<CR>', opts)
-  --     map('n', '<Space>bd', '<Cmd>BufferOrderByDirectory<CR>', opts)
-  --     map('n', '<Space>bl', '<Cmd>BufferOrderByLanguage<CR>', opts)
-  --     map('n', '<Space>bw', '<Cmd>BufferOrderByWindowNumber<CR>', opts)
-  --
-  --     -- Other:
-  --     -- :BarbarEnable - enables barbar (enabled by default)
-  --     -- :BarbarDisable - very bad command, should never be used
-  --   end,
-  --   opts = {
-  --     icons = {
-  --       buffer_number = true,
-  --     },
-  --   },
-  --   -- version = '^1.0.0', -- optional: only update when a new 1.x version is released
-  -- },
-  {
-    'nanozuki/tabby.nvim',
+  { -- bufferline.nvim: Tabline
+    'akinsho/bufferline.nvim',
+    version = '*',
     dependencies = {
       { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     },
     config = function()
+      require('bufferline').setup {
+        options = {
+          numbers = 'ordinal',
+          diagnostics = 'nvim_lsp',
+          diagnostics_indicator = function(count, level, diagnostics_dict, context)
+            local icon = level:match 'error' and ' ' or ' '
+            return ' ' .. icon .. count
+          end,
+          show_buffer_close_icons = false,
+          show_close_icon = false,
+          show_tab_indicators = true,
+          separator_style = 'thin',
+          always_show_bufferline = true,
+          mode = 'tabs',
+        },
+      }
       local map = vim.api.nvim_set_keymap
       local opts = { noremap = true, silent = true }
       -- Move to previous/next
@@ -1112,6 +1097,43 @@ require('lazy').setup({
       -- Re-order to previous/next
       map('n', '<A-<>', ':-tabmove<CR>', opts)
       map('n', '<A->>', ':+tabmove<CR>', opts)
+    end,
+  },
+  { -- nvim-ufo: Folding
+    'kevinhwang91/nvim-ufo',
+    dependencies = {
+      'kevinhwang91/promise-async',
+      'nvim-treesitter/nvim-treesitter',
+      {
+        'luukvbaal/statuscol.nvim',
+        config = function()
+          local builtin = require 'statuscol.builtin'
+          require('statuscol').setup {
+            relculright = true,
+            segments = {
+              { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },
+              { text = { '%s' }, click = 'v:lua.ScSa' },
+              { text = { builtin.lnumfunc, ' ' }, click = 'v:lua.ScLa' },
+            },
+          }
+        end,
+      },
+    },
+    config = function()
+      vim.o.foldcolumn = '1' -- '0' is not bad
+      vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+      vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
+
+      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+      require('ufo').setup {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end,
+      }
     end,
   },
 
