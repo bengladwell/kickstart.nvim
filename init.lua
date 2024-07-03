@@ -894,6 +894,8 @@ require('lazy').setup({
       require('tokyonight').setup {
         -- Override the default styles for the colorscheme here
         --  See `:help tokyonight` for more information
+        --  See https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_night.lua
+        --  for names of highlight groups.
         on_highlights = function(hl, c)
           hl.TabLine = {
             fg = util.lighten(hl.TabLine.fg, 0.5),
@@ -1135,6 +1137,23 @@ require('lazy').setup({
         end,
       }
     end,
+  },
+  { -- vim-tmux-navigator: Navigate between Neovim and Tmux panes
+    'christoomey/vim-tmux-navigator',
+    cmd = {
+      'TmuxNavigateLeft',
+      'TmuxNavigateDown',
+      'TmuxNavigateUp',
+      'TmuxNavigateRight',
+      'TmuxNavigatePrevious',
+    },
+    keys = {
+      { '<c-h>', '<cmd><C-U>TmuxNavigateLeft<cr>' },
+      { '<c-j>', '<cmd><C-U>TmuxNavigateDown<cr>' },
+      { '<c-k>', '<cmd><C-U>TmuxNavigateUp<cr>' },
+      { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
+      { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
+    },
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
