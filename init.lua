@@ -1027,7 +1027,7 @@ require('lazy').setup({
     },
     config = function()
       require('nvim-tree').setup {
-        disable_netrw = true,
+        disable_netrw = false,
         hijack_netrw = true,
         update_focused_file = {
           enable = true,
@@ -1154,6 +1154,20 @@ require('lazy').setup({
       { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
       { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
     },
+  },
+  {
+    'vim-test/vim-test',
+    dependencies = {
+      'tpope/vim-dispatch',
+    },
+    config = function()
+      vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
+      vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Test [N]earest' }) -- NO!
+      vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
+      vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
+      vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
+      vim.g['test#strategy'] = 'dispatch'
+    end,
   },
 
   -- The following two comments only work if you have downloaded the kickstart repo, not just copy pasted the
