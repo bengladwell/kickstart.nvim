@@ -922,7 +922,7 @@ require('lazy').setup({
             fg = util.lighten(hl.GitSignsChange.fg, 0.5),
           }
           hl.GitSignsDelete = {
-            fg = util.lighten(hl.GitGutterDelete.fg, 0.5),
+            fg = util.lighten(hl.GitSignsDelete.fg, 0.5),
           }
         end,
       }
