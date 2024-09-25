@@ -196,7 +196,7 @@ vim.keymap.set('n', '<leader>2', ':set ts=2 sw=2 expandtab<Enter>', { desc = 'Se
 vim.keymap.set('n', '<leader>4', ':set ts=4 sw=4 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 4' })
 
 -- nmap <silent> <Leader>d :execute "tabe+" . line(".") . " %"<CR>gT
-vim.keymap.set('n', '<leader>d', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = 'Open file in new tab at location' })
+vim.keymap.set('n', '<leader>f', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = 'Open [F]ile in new tab at location' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -222,10 +222,11 @@ end ---@diagnostic disable-next-line: undefined-field
 vim.opt.rtp:prepend(lazypath)
 
 -- Check if a local .vimrc exists in the current directory and source it
-local local_config = vim.fn.getcwd() .. '/.vimrc'
+local local_config = vim.fn.getcwd() .. '/.nvim/init.lua'
 
 if vim.fn.filereadable(local_config) == 1 then
-  vim.cmd('source ' .. local_config)
+  -- vim.notify('Sourcing local config: ' .. local_config, 'info')
+  dofile(local_config)
 end
 
 -- Remember file folds
@@ -251,7 +252,88 @@ vim.cmd [[
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  'github/copilot.vim',
+  {
+    'github/copilot.vim',
+  },
+  {
+    'yetone/avante.nvim',
+    event = 'VeryLazy',
+    build = 'make',
+    opts = {
+      provider = 'openai',
+      mappings = {
+        ask = '<leader>aa',
+        edit = '<leader>ae',
+        refresh = '<leader>ar',
+        --- @class AvanteConflictMappings
+        diff = {
+          ours = 'co',
+          theirs = 'ct',
+          none = 'c0',
+          both = 'cb',
+          next = ']x',
+          prev = '[x',
+        },
+        jump = {
+          next = ']]',
+          prev = '[[',
+        },
+        submit = {
+          normal = '<CR>',
+          insert = '<C-s>',
+        },
+        toggle = {
+          debug = '<leader>ad',
+          hint = '<leader>ah',
+        },
+      },
+      hints = { enabled = true },
+      windows = {
+        wrap = true, -- similar to vim.o.wrap
+        width = 30, -- default % based on available width
+        sidebar_header = {
+          align = 'center', -- left, center, right for title
+          rounded = true,
+        },
+      },
+      highlights = {
+        ---@type AvanteConflictHighlights
+        diff = {
+          current = 'DiffText',
+          incoming = 'DiffAdd',
+        },
+      },
+      --- @class AvanteConflictUserConfig
+      diff = {
+        debug = false,
+        autojump = true,
+        ---@type string | fun(): any
+        list_opener = 'copen',
+      },
+    },
+    dependencies = {
+      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+      'stevearc/dressing.nvim',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      --- The below is optional, make sure to setup it properly if you have lazy=true
+      -- {
+      --   'MeanderingProgrammer/render-markdown.nvim',
+      --   opts = {
+      --     file_types = { 'markdown', 'Avante' },
+      --   },
+      --   ft = { 'markdown', 'Avante' },
+      -- },
+    },
+    -- config = function()
+    --   -- views can only be fully collapsed with the global statusline
+    --   -- (BG) consider moving this to the top level config - it seems like a good setting irrespective of Avante.
+    --   vim.opt.laststatus = 3
+    --   -- Default splitting will cause your main splits to jump when opening an edgebar.
+    --   -- To prevent this, set `splitkeep` to either `screen` or `topline`.
+    --   vim.opt.splitkeep = 'screen'
+    -- end,
+  },
   { -- vim-dadbod-ui: Database UI
     'kristijanhusak/vim-dadbod-ui',
     dependencies = {
@@ -331,19 +413,26 @@ require('lazy').setup({
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>c', group = '[C]ode' },
+        { '<leader>c_', hidden = true },
+        { '<leader>d', group = '[D]ebug' },
+        { '<leader>d_', hidden = true },
+        { '<leader>h', group = 'Git [H]unk' },
+        { '<leader>h_', hidden = true },
+        { '<leader>r', group = '[R]ename' },
+        { '<leader>r_', hidden = true },
+        { '<leader>s', group = '[S]earch' },
+        { '<leader>s_', hidden = true },
+        { '<leader>t', group = '[T]oggle' },
+        { '<leader>t_', hidden = true },
+        { '<leader>w', group = '[W]orkspace' },
+        { '<leader>w_', hidden = true },
       }
       -- visual mode
-      require('which-key').register({
-        ['<leader>h'] = { 'Git [H]unk' },
-      }, { mode = 'v' })
+      require('which-key').add {
+        { '<leader>h', group = 'Git [H]unk', mode = 'v' },
+      }
     end,
   },
 
@@ -477,6 +566,94 @@ require('lazy').setup({
     end,
   },
 
+  {
+    'rcarriga/nvim-dap-ui',
+    dependencies = {
+      'mfussenegger/nvim-dap',
+    },
+    config = function()
+      local dap, dapui = require 'dap', require 'dapui'
+      dap.listeners.before.attach.dapui_config = function()
+        dapui.open()
+      end
+      dap.listeners.before.launch.dapui_config = function()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated.dapui_config = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_exited.dapui_config = function()
+        dapui.close()
+      end
+      dap.listeners.before.event_stopped.dapui_config = function()
+        dapui.open()
+      end
+
+      vim.fn.sign_define('DapBreakpoint', { text = '📍', texthl = '', linehl = '', numhl = '' })
+      vim.fn.sign_define('DapStopped', { text = '⚠️', texthl = '', linehl = '', numhl = '' })
+
+      vim.keymap.set('n', '<leader>dc', dap.continue, { desc = '[D]ebug [C]ontinue' })
+      vim.keymap.set('n', '<leader>dq', dapui.setup, { desc = '[D]ebug [Q]uit' })
+      vim.keymap.set('n', '<leader>ds', dap.step_over, { desc = '[D]ebug [S]tep Over' })
+      vim.keymap.set('n', '<leader>di', dap.step_into, { desc = '[D]ebug [I]nto' })
+      vim.keymap.set('n', '<leader>db', dap.toggle_breakpoint, { desc = '[D]ebug [B]reakpoint' })
+      vim.keymap.set('n', '<leader>do', dap.step_out, { desc = '[D]ebug [O]ut' })
+      vim.keymap.set('n', '<leader>dr', dap.run_to_cursor, { desc = '[D]ebug [R]un to cursor' })
+      vim.keymap.set('n', '<leader>du', dapui.toggle, { desc = '[D]ebug [U]I Toggle' })
+      -- In normal mode andvisual mode map <<leader>d e to dapui eval
+      vim.keymap.set('n', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
+      vim.keymap.set('v', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
+      vim.keymap.set('n', '<leader>dp', function()
+        require('dap.ui.widgets').preview()
+      end, { desc = '[D]ebug [P]review' })
+      vim.keymap.set('n', '<leader>dh', function()
+        require('dap.ui.widgets').hover()
+      end, { desc = '[D]ebug [H]over' })
+
+      local local_dap_config = vim.fn.getcwd() .. '/.nvim/dap.lua'
+
+      -- Setup DAP config per project directory using <ROOT>/.nvim/dap.lua.
+      -- Example ruby setup:
+      -- In <ROOT>/.nvim/dap.lua:
+      -- ```lua`
+      -- local dap = require("dap")
+      --
+      -- -- Ruby debugging requires `Gem install debug`; (installed with Rails by default)
+      -- dap.adapters.ruby = function(on_config, config)
+      --   on_config({
+      --     type = "pipe",
+      --     pipe = config.pipe,
+      --   })
+      -- end
+      --
+      -- dap.configurations.ruby = {
+      --   {
+      --     type = "ruby",
+      --     request = "attach",
+      --     name = "Debug Sidekiq",
+      --     pipe = vim.fn.getcwd() .. "/tmp/sidekiq_debug.sock",
+      --   },
+      --   {
+      --     type = "ruby",
+      --     request = "attach",
+      --     name = "Debug Puma",
+      --     pipe = vim.fn.getcwd() .. "/tmp/puma_debug.sock",
+      --   },
+      -- }
+      -- ```
+      -- In Procfile.debug:
+      -- ```
+      -- web: bin/rdbg -n -O --sock-path ./tmp/puma_debug.sock -c -- bundle exec puma -C config/puma.rb -p 3000
+      -- jobs: bin/rdbg -n -O --sock-path ./tmp/sidekiq_debug.sock -c -- bundle exec sidekiq -C config/sidekiq.yml
+      -- ```
+
+      if vim.fn.filereadable(local_dap_config) == 1 then
+        -- vim.notify('Sourcing local DAP config: ' .. local_dap_config, 'info')
+        dofile(local_dap_config)
+      end
+    end,
+  },
+
   { -- nvim-lspconfig: LSP Configuration & Plugins
     'neovim/nvim-lspconfig',
     dependencies = {
@@ -559,7 +736,7 @@ require('lazy').setup({
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+          map('<leader>dS', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
@@ -579,7 +756,7 @@ require('lazy').setup({
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
-          --  Commenting this out gives default behavior of gD, which I prefer. It seems to go to where the symbol
+          --  (BG) Commenting this out gives default behavior of gD, which I prefer. It seems to go to where the symbol
           --  first appears in the file, which is usually what I want.
           -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
@@ -677,14 +854,34 @@ require('lazy').setup({
           },
         },
 
-        -- Mason installs gems using the global ruby version, which causes problems. I was
-        -- not able to figure out how to make it install using the currently active rbenv
-        -- version, including a custom command for these servers that uses ~/.rbenv/shims/ruby-lsp,
-        -- rubocop, etc.
-        -- So, set the global rbenv to the same one you are developing with, or figure out something
-        -- better. E.g. `rbenv global 3.3.0`
-        solargraph = {},
-        rubocop = {},
+        -- Mason installs gems using the global ruby version, which causes problems.
+        -- Instead, manually install solargraph, ruby_lsp, and rubocop with
+        -- `gem install solargraph solargraph-rails ruby-lsp rubocop` and configure with
+        -- `cmd = { os.getenv 'HOME' .. './rbenv/shims/<executable> }`.
+        --
+        -- ruby_lsp precedes solargprah because we want nvim to try to use it first. If possible, it would probably
+        -- be better to be explicit about which language server features we want for one or both.
+
+        ruby_lsp = {
+          cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
+        },
+        solargraph = {
+          cmd = { os.getenv 'HOME' .. '/.rbenv/shims/solargraph', 'stdio' },
+          --   settings = {
+          --     solargraph = {
+          --       autouormat = true,
+          --       completion = true,
+          --       diagnostic = true,
+          --       folding = true,
+          --       references = true,
+          --       rename = true,
+          --       symbols = true,
+          --     },
+          --   },
+        },
+        rubocop = {
+          cmd = { os.getenv 'HOME' .. '/.rbenv/shims/rubocop', '--lsp' },
+        },
       }
 
       -- Ensure the servers and tools above are installed
@@ -892,6 +1089,9 @@ require('lazy').setup({
     config = function()
       local util = require 'tokyonight.util'
       require('tokyonight').setup {
+        -- temporary until the following is merged: https://github.com/folke/tokyonight.nvim/pull/620
+        -- NOTE: MeanderingProgrammer/render-markdown.nvim was originally added to support yetone/avante.nvim
+        -- plugins = { markdown = true },
         -- Override the default styles for the colorscheme here
         --  See `:help tokyonight` for more information
         --  See https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_night.lua
@@ -1027,7 +1227,7 @@ require('lazy').setup({
     },
     config = function()
       require('nvim-tree').setup {
-        disable_netrw = false,
+        disable_netrw = true,
         hijack_netrw = true,
         update_focused_file = {
           enable = true,
@@ -1164,7 +1364,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
       vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Test [N]earest' }) -- NO!
       vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
-      vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
+      -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
       vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
       vim.g['test#strategy'] = 'dispatch'
     end,
