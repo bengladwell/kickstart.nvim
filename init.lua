@@ -1359,6 +1359,7 @@ require('lazy').setup({
     'vim-test/vim-test',
     dependencies = {
       'tpope/vim-dispatch',
+      'esamattis/slimux',
     },
     config = function()
       vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
@@ -1366,7 +1367,8 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
       -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
       vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
-      vim.g['test#strategy'] = 'dispatch'
+      vim.g['test#strategy'] = 'slimux'
+      vim.g['test#python#pytest#executable'] = 'pytest'
     end,
   },
 
