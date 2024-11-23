@@ -570,6 +570,8 @@ require('lazy').setup({
     'rcarriga/nvim-dap-ui',
     dependencies = {
       'mfussenegger/nvim-dap',
+      'mfussenegger/nvim-dap-python',
+      'nvim-neotest/nvim-nio',
     },
     config = function()
       local dap, dapui = require 'dap', require 'dapui'
@@ -589,20 +591,43 @@ require('lazy').setup({
         dapui.open()
       end
 
+      dapui.setup {
+        -- Set icons to characters that are more likely to work in every terminal.
+        --    Feel free to remove or use ones that you like more! :)
+        --    Don't feel like these are good choices.
+        icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
+        controls = {
+          icons = {
+            pause = '⏸',
+            play = '▶',
+            step_into = '⏎',
+            step_over = '⏭',
+            step_out = '⏮',
+            step_back = 'b',
+            run_last = '▶▶',
+            terminate = '⏹',
+            disconnect = '⏏',
+          },
+        },
+      }
+      -- TODO: nvim-dap-ui README calls for using nvim-neotext/nvim-nio
+
       vim.fn.sign_define('DapBreakpoint', { text = '📍', texthl = '', linehl = '', numhl = '' })
       vim.fn.sign_define('DapStopped', { text = '⚠️', texthl = '', linehl = '', numhl = '' })
 
       vim.keymap.set('n', '<leader>dc', dap.continue, { desc = '[D]ebug [C]ontinue' })
-      vim.keymap.set('n', '<leader>dq', dapui.setup, { desc = '[D]ebug [Q]uit' })
+      -- vim.keymap.set('n', '<leader>dq', dapui.setup, { desc = '[D]ebug [Q]uit' })
+      vim.keymap.set('n', '<leader>dq', dap.disconnect, { desc = '[D]ebug [Q]uit' })
       vim.keymap.set('n', '<leader>ds', dap.step_over, { desc = '[D]ebug [S]tep Over' })
       vim.keymap.set('n', '<leader>di', dap.step_into, { desc = '[D]ebug [I]nto' })
       vim.keymap.set('n', '<leader>db', dap.toggle_breakpoint, { desc = '[D]ebug [B]reakpoint' })
       vim.keymap.set('n', '<leader>do', dap.step_out, { desc = '[D]ebug [O]ut' })
       vim.keymap.set('n', '<leader>dr', dap.run_to_cursor, { desc = '[D]ebug [R]un to cursor' })
       vim.keymap.set('n', '<leader>du', dapui.toggle, { desc = '[D]ebug [U]I Toggle' })
-      -- In normal mode andvisual mode map <<leader>d e to dapui eval
+      -- In normal mode and visual mode map <<leader>d e to dapui eval
       vim.keymap.set('n', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
       vim.keymap.set('v', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
+      vim.keymap.set('n', '<leader>dt', require('dap-python').test_method, { desc = '[D]ebug python [T]est function' })
       vim.keymap.set('n', '<leader>dp', function()
         require('dap.ui.widgets').preview()
       end, { desc = '[D]ebug [P]review' })
@@ -1297,8 +1322,8 @@ require('lazy').setup({
       map('n', '<A-,>', ':tabp<CR>', opts)
       map('n', '<A-.>', ':tabn<CR>', opts)
       -- Re-order to previous/next
-      map('n', '<A-<>', ':-tabmove<CR>', opts)
-      map('n', '<A->>', ':+tabmove<CR>', opts)
+      map('n', '<A-h>', ':-tabmove<CR>', opts)
+      map('n', '<A-l>', ':+tabmove<CR>', opts)
     end,
   },
   { -- nvim-ufo: Folding
@@ -1338,28 +1363,40 @@ require('lazy').setup({
       }
     end,
   },
-  { -- vim-tmux-navigator: Navigate between Neovim and Tmux panes
-    'christoomey/vim-tmux-navigator',
-    cmd = {
-      'TmuxNavigateLeft',
-      'TmuxNavigateDown',
-      'TmuxNavigateUp',
-      'TmuxNavigateRight',
-      'TmuxNavigatePrevious',
-    },
-    keys = {
-      { '<c-h>', '<cmd><C-U>TmuxNavigateLeft<cr>' },
-      { '<c-j>', '<cmd><C-U>TmuxNavigateDown<cr>' },
-      { '<c-k>', '<cmd><C-U>TmuxNavigateUp<cr>' },
-      { '<c-l>', '<cmd><C-U>TmuxNavigateRight<cr>' },
-      { '<c-\\>', '<cmd><C-U>TmuxNavigatePrevious<cr>' },
-    },
+  {
+    'akinsho/toggleterm.nvim',
+    config = function()
+      function _G.set_terminal_keymaps()
+        local opts = { buffer = 0 }
+        vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
+        vim.keymap.set('t', '<C-j>', [[<Cmd>wincmd j<CR>]], opts)
+        vim.keymap.set('t', '<C-k>', [[<Cmd>wincmd k<CR>]], opts)
+        vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
+        vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
+      end
+
+      -- if you only want these mappings for toggle term use term://*toggleterm#* instead
+      vim.cmd 'autocmd! TermOpen term://* lua set_terminal_keymaps()'
+
+      require('toggleterm').setup {
+        -- size = 20,
+        open_mapping = [[<c-\>]],
+        -- hide_numbers = true,
+        -- shade_filetypes = {},
+        -- shade_terminals = true,
+        -- shading_factor = '<number>',
+        -- start_in_insert = true,
+        -- insert_mappings = true,
+        direction = 'float',
+      }
+    end,
   },
   {
     'vim-test/vim-test',
     dependencies = {
       'tpope/vim-dispatch',
-      'esamattis/slimux',
     },
     config = function()
       vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
@@ -1367,8 +1404,9 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
       -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
       vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
-      vim.g['test#strategy'] = 'slimux'
+      vim.g['test#strategy'] = 'toggleterm'
       vim.g['test#python#pytest#executable'] = 'pytest'
+      vim.g['slimux_select_from_current_window'] = 1
     end,
   },
 
@@ -1381,7 +1419,7 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  require 'kickstart.plugins.debug',
+  -- require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
