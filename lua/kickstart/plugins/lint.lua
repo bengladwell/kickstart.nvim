@@ -5,6 +5,8 @@ return {
     event = { 'BufReadPre', 'BufNewFile' },
     config = function()
       local lint = require 'lint'
+      lint.linters.pycodestyle.cmd = 'uv'
+      lint.linters.pycodestyle.args = { 'run', 'pycodestyle', '--format=%(path)s:%(row)d:%(col)d:%(code)s:%(text)s', '-' }
       lint.linters_by_ft = {
         -- markdown = { 'markdownlint' },
         -- ruby = { 'rubocop' },

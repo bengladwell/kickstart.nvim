@@ -260,78 +260,36 @@ require('lazy').setup({
     event = 'VeryLazy',
     build = 'make',
     opts = {
-      provider = 'openai',
-      mappings = {
-        ask = '<leader>aa',
-        edit = '<leader>ae',
-        refresh = '<leader>ar',
-        --- @class AvanteConflictMappings
-        diff = {
-          ours = 'co',
-          theirs = 'ct',
-          none = 'c0',
-          both = 'cb',
-          next = ']x',
-          prev = '[x',
-        },
-        jump = {
-          next = ']]',
-          prev = '[[',
-        },
-        submit = {
-          normal = '<CR>',
-          insert = '<C-s>',
-        },
-        toggle = {
-          debug = '<leader>ad',
-          hint = '<leader>ah',
-        },
+      provider = 'claude',
+      claude = {
+        model = 'claude-3-7-sonnet-latest',
       },
       hints = { enabled = true },
       windows = {
-        wrap = true, -- similar to vim.o.wrap
-        width = 30, -- default % based on available width
-        sidebar_header = {
-          align = 'center', -- left, center, right for title
-          rounded = true,
-        },
-      },
-      highlights = {
-        ---@type AvanteConflictHighlights
-        diff = {
-          current = 'DiffText',
-          incoming = 'DiffAdd',
-        },
-      },
-      --- @class AvanteConflictUserConfig
-      diff = {
-        debug = false,
-        autojump = true,
-        ---@type string | fun(): any
-        list_opener = 'copen',
+        width = 50, -- default % based on available width
       },
     },
     dependencies = {
+      'nvim-treesitter/nvim-treesitter',
       'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
       'stevearc/dressing.nvim',
       'nvim-lua/plenary.nvim',
       'MunifTanjim/nui.nvim',
-      --- The below is optional, make sure to setup it properly if you have lazy=true
-      -- {
-      --   'MeanderingProgrammer/render-markdown.nvim',
-      --   opts = {
-      --     file_types = { 'markdown', 'Avante' },
-      --   },
-      --   ft = { 'markdown', 'Avante' },
-      -- },
+      'nvim-telescope/telescope.nvim',
+      'hrsh7th/nvim-cmp',
+      {
+        -- Make sure to set this up properly if you have lazy=true
+        'MeanderingProgrammer/render-markdown.nvim',
+        opts = {
+          file_types = { 'markdown', 'Avante' },
+        },
+        ft = { 'markdown', 'Avante' },
+      },
     },
     -- config = function()
-    --   -- views can only be fully collapsed with the global statusline
-    --   -- (BG) consider moving this to the top level config - it seems like a good setting irrespective of Avante.
+    --   -- views can only be fully collapsed when there is a single status line,
+    --   -- not one status line per split, which is what laststatus = 2 does.
     --   vim.opt.laststatus = 3
-    --   -- Default splitting will cause your main splits to jump when opening an edgebar.
-    --   -- To prevent this, set `splitkeep` to either `screen` or `topline`.
-    --   vim.opt.splitkeep = 'screen'
     -- end,
   },
   { -- vim-dadbod-ui: Database UI
@@ -884,8 +842,10 @@ require('lazy').setup({
         -- `gem install solargraph solargraph-rails ruby-lsp rubocop` and configure with
         -- `cmd = { os.getenv 'HOME' .. './rbenv/shims/<executable> }`.
         --
-        -- ruby_lsp precedes solargprah because we want nvim to try to use it first. If possible, it would probably
+        -- ruby_lsp precedes solargraph because we want nvim to try to use it first. If possible, it would probably
         -- be better to be explicit about which language server features we want for one or both.
+        --
+        -- After upgrading ruby version, be sure to: `gem install solargraph solargraph-rails ruby-lsp rubocop`
 
         ruby_lsp = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
@@ -1233,6 +1193,14 @@ require('lazy').setup({
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+
+      -- Disable treesitter in terminal buffers
+      -- vim.api.nvim_create_autocmd('TermOpen', {
+      --   group = vim.api.nvim_create_augroup('disable-treesitter-termopen', { clear = true }),
+      --   callback = function()
+      --     vim.cmd 'TSDisable highlight'
+      --   end,
+      -- })
     end,
   },
   { -- treesj: Split/join blocks of code
@@ -1407,7 +1375,7 @@ require('lazy').setup({
       -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
       vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
       vim.g['test#strategy'] = 'toggleterm'
-      vim.g['test#python#pytest#executable'] = 'pytest'
+      vim.g['test#python#pytest#executable'] = 'uv run pytest -s --disable-warnings'
       vim.g['slimux_select_from_current_window'] = 1
     end,
   },
