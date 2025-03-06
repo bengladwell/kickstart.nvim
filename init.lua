@@ -114,7 +114,9 @@ vim.opt.showmode = false
 -- Sync clipboard between OS and Neovim.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
--- vim.opt.clipboard = 'unnamedplus'
+-- vim.schedule(function()
+--   vim.opt.clipboard = 'unnamedplus'
+-- end)
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -252,6 +254,7 @@ vim.cmd [[
 --
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
+  --  BEGIN non kickstart plugins
   {
     'github/copilot.vim',
   },
@@ -315,6 +318,186 @@ require('lazy').setup({
   },
   'tpope/vim-dispatch',
   'slim-template/vim-slim',
+  -- "gc" to comment visual regions/lines
+  { 'numToStr/Comment.nvim', opts = {} },
+  { -- treesj: Split/join blocks of code
+    'Wansmer/treesj',
+    keys = { '<leader>m', '<leader>M' },
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    config = function()
+      require('treesj').setup {}
+      vim.keymap.set('n', '<leader>m', require('treesj').toggle, { desc = 'Toggle [M]iniMap' })
+      vim.keymap.set('n', '<leader>M', function()
+        require('treesj').toggle { split = { recursive = true } }
+      end, { desc = 'Toggle [M]iniMap (recursive)' })
+    end,
+  },
+  { -- nvim-tree: file explorer
+    'nvim-tree/nvim-tree.lua',
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
+    config = function()
+      require('nvim-tree').setup {
+        disable_netrw = true,
+        hijack_netrw = true,
+        update_focused_file = {
+          enable = true,
+          update_cwd = true,
+        },
+      }
+      vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<Enter>', { desc = '[T]oggle [T]ree' })
+    end,
+  },
+  { -- alpha-nvim: greeter page
+    'goolord/alpha-nvim', -- Greeter
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
+    config = function()
+      require('alpha').setup(require('alpha.themes.startify').config)
+    end,
+  },
+  { -- trouble.nvim: Diagnostics in quickfix
+    'folke/trouble.nvim',
+    opts = {},
+    cmd = 'Trouble',
+    keys = {
+      {
+        '<leader>xx',
+        '<cmd>Trouble diagnostics toggle<cr>',
+        desc = 'Diagnostics (Trouble)',
+      },
+      {
+        '<leader>cs',
+        '<cmd>Trouble symbols toggle focus=false<cr>',
+        desc = 'Symbols (Trouble)',
+      },
+      {
+        '<C-w>t',
+        '<cmd>Trouble symbols toggle focus=true<cr>',
+        desc = 'Symbols Focus (Trouble)',
+      },
+    },
+  },
+  { -- bufferline.nvim: Tabline
+    'akinsho/bufferline.nvim',
+    version = '*',
+    dependencies = {
+      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
+    },
+    config = function()
+      require('bufferline').setup {
+        options = {
+          numbers = 'ordinal',
+          diagnostics = 'nvim_lsp',
+          diagnostics_indicator = function(count, level, diagnostics_dict, context)
+            local icon = level:match 'error' and ' ' or ' '
+            return ' ' .. icon .. count
+          end,
+          show_buffer_close_icons = false,
+          show_close_icon = false,
+          show_tab_indicators = true,
+          separator_style = 'thin',
+          always_show_bufferline = true,
+          mode = 'tabs',
+        },
+      }
+      local map = vim.api.nvim_set_keymap
+      local opts = { noremap = true, silent = true }
+      -- Move to previous/next
+      map('n', '<A-,>', ':tabp<CR>', opts)
+      map('n', '<A-.>', ':tabn<CR>', opts)
+      -- Re-order to previous/next
+      map('n', '<A-h>', ':-tabmove<CR>', opts)
+      map('n', '<A-l>', ':+tabmove<CR>', opts)
+    end,
+  },
+  { -- nvim-ufo: Folding
+    'kevinhwang91/nvim-ufo',
+    dependencies = {
+      'kevinhwang91/promise-async',
+      'nvim-treesitter/nvim-treesitter',
+      {
+        'luukvbaal/statuscol.nvim',
+        config = function()
+          local builtin = require 'statuscol.builtin'
+          require('statuscol').setup {
+            relculright = true,
+            segments = {
+              { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },
+              { text = { '%s' }, click = 'v:lua.ScSa' },
+              { text = { builtin.lnumfunc, ' ' }, click = 'v:lua.ScLa' },
+            },
+          }
+        end,
+      },
+    },
+    config = function()
+      vim.o.foldcolumn = '1' -- '0' is not bad
+      vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+      vim.o.foldlevelstart = 99
+      vim.o.foldenable = true
+      vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
+
+      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
+      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
+      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
+      require('ufo').setup {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end,
+      }
+    end,
+  },
+  {
+    'akinsho/toggleterm.nvim',
+    config = function()
+      function _G.set_terminal_keymaps()
+        local opts = { buffer = 0 }
+        vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
+        vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
+        vim.keymap.set('t', '<C-j>', [[<Cmd>wincmd j<CR>]], opts)
+        vim.keymap.set('t', '<C-k>', [[<Cmd>wincmd k<CR>]], opts)
+        vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
+        vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
+      end
+
+      -- if you only want these mappings for toggle term use term://*toggleterm#* instead
+      vim.cmd 'autocmd! TermOpen term://* lua set_terminal_keymaps()'
+
+      require('toggleterm').setup {
+        -- size = 20,
+        open_mapping = [[<c-\>]],
+        -- hide_numbers = true,
+        -- shade_filetypes = {},
+        -- shade_terminals = true,
+        -- shading_factor = '<number>',
+        -- start_in_insert = true,
+        -- insert_mappings = true,
+        direction = 'float',
+      }
+    end,
+  },
+  {
+    'vim-test/vim-test',
+    dependencies = {
+      'tpope/vim-dispatch',
+    },
+    config = function()
+      vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
+      vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Test [N]earest' }) -- NO!
+      vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
+      -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
+      vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
+      vim.g['test#strategy'] = 'toggleterm'
+      vim.g['test#python#pytest#executable'] = 'uv run pytest -s --disable-warnings'
+      vim.g['slimux_select_from_current_window'] = 1
+    end,
+  },
+  -- END non kickstart plugins
+
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
@@ -326,9 +509,6 @@ require('lazy').setup({
   --
   --  This is equivalent to:
   --    require('Comment').setup({})
-
-  -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -644,7 +824,7 @@ require('lazy').setup({
       { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-      'ray-x/lsp_signature.nvim',
+      'ray-x/lsp_signature.nvim', -- (BG) Adds method signatures as you type
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
@@ -1201,182 +1381,6 @@ require('lazy').setup({
       --     vim.cmd 'TSDisable highlight'
       --   end,
       -- })
-    end,
-  },
-  { -- treesj: Split/join blocks of code
-    'Wansmer/treesj',
-    keys = { '<leader>m', '<leader>M' },
-    dependencies = { 'nvim-treesitter/nvim-treesitter' },
-    config = function()
-      require('treesj').setup {}
-      vim.keymap.set('n', '<leader>m', require('treesj').toggle, { desc = 'Toggle [M]iniMap' })
-      vim.keymap.set('n', '<leader>M', function()
-        require('treesj').toggle { split = { recursive = true } }
-      end, { desc = 'Toggle [M]iniMap (recursive)' })
-    end,
-  },
-  { -- nvim-tree: file explorer
-    'nvim-tree/nvim-tree.lua',
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-    },
-    config = function()
-      require('nvim-tree').setup {
-        disable_netrw = true,
-        hijack_netrw = true,
-        update_focused_file = {
-          enable = true,
-          update_cwd = true,
-        },
-      }
-      vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<Enter>', { desc = '[T]oggle [T]ree' })
-    end,
-  },
-  { -- alpha-nvim: greeter page
-    'goolord/alpha-nvim', -- Greeter
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-    },
-    config = function()
-      require('alpha').setup(require('alpha.themes.startify').config)
-    end,
-  },
-  { -- trouble.nvim: Diagnostics in quickfix
-    'folke/trouble.nvim',
-    opts = {},
-    cmd = 'Trouble',
-    keys = {
-      {
-        '<leader>xx',
-        '<cmd>Trouble diagnostics toggle<cr>',
-        desc = 'Diagnostics (Trouble)',
-      },
-      {
-        '<leader>cs',
-        '<cmd>Trouble symbols toggle focus=false<cr>',
-        desc = 'Symbols (Trouble)',
-      },
-      {
-        '<C-w>t',
-        '<cmd>Trouble symbols toggle focus=true<cr>',
-        desc = 'Symbols Focus (Trouble)',
-      },
-    },
-  },
-  { -- bufferline.nvim: Tabline
-    'akinsho/bufferline.nvim',
-    version = '*',
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-    },
-    config = function()
-      require('bufferline').setup {
-        options = {
-          numbers = 'ordinal',
-          diagnostics = 'nvim_lsp',
-          diagnostics_indicator = function(count, level, diagnostics_dict, context)
-            local icon = level:match 'error' and ' ' or ' '
-            return ' ' .. icon .. count
-          end,
-          show_buffer_close_icons = false,
-          show_close_icon = false,
-          show_tab_indicators = true,
-          separator_style = 'thin',
-          always_show_bufferline = true,
-          mode = 'tabs',
-        },
-      }
-      local map = vim.api.nvim_set_keymap
-      local opts = { noremap = true, silent = true }
-      -- Move to previous/next
-      map('n', '<A-,>', ':tabp<CR>', opts)
-      map('n', '<A-.>', ':tabn<CR>', opts)
-      -- Re-order to previous/next
-      map('n', '<A-h>', ':-tabmove<CR>', opts)
-      map('n', '<A-l>', ':+tabmove<CR>', opts)
-    end,
-  },
-  { -- nvim-ufo: Folding
-    'kevinhwang91/nvim-ufo',
-    dependencies = {
-      'kevinhwang91/promise-async',
-      'nvim-treesitter/nvim-treesitter',
-      {
-        'luukvbaal/statuscol.nvim',
-        config = function()
-          local builtin = require 'statuscol.builtin'
-          require('statuscol').setup {
-            relculright = true,
-            segments = {
-              { text = { builtin.foldfunc }, click = 'v:lua.ScFa' },
-              { text = { '%s' }, click = 'v:lua.ScSa' },
-              { text = { builtin.lnumfunc, ' ' }, click = 'v:lua.ScLa' },
-            },
-          }
-        end,
-      },
-    },
-    config = function()
-      vim.o.foldcolumn = '1' -- '0' is not bad
-      vim.o.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
-      vim.o.foldlevelstart = 99
-      vim.o.foldenable = true
-      vim.o.fillchars = [[eob: ,fold: ,foldopen:,foldsep: ,foldclose:]]
-
-      -- Using ufo provider need remap `zR` and `zM`. If Neovim is 0.6.1, remap yourself
-      vim.keymap.set('n', 'zR', require('ufo').openAllFolds)
-      vim.keymap.set('n', 'zM', require('ufo').closeAllFolds)
-      require('ufo').setup {
-        provider_selector = function(bufnr, filetype, buftype)
-          return { 'treesitter', 'indent' }
-        end,
-      }
-    end,
-  },
-  {
-    'akinsho/toggleterm.nvim',
-    config = function()
-      function _G.set_terminal_keymaps()
-        local opts = { buffer = 0 }
-        vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
-        vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
-        vim.keymap.set('t', '<C-h>', [[<Cmd>wincmd h<CR>]], opts)
-        vim.keymap.set('t', '<C-j>', [[<Cmd>wincmd j<CR>]], opts)
-        vim.keymap.set('t', '<C-k>', [[<Cmd>wincmd k<CR>]], opts)
-        vim.keymap.set('t', '<C-l>', [[<Cmd>wincmd l<CR>]], opts)
-        vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
-      end
-
-      -- if you only want these mappings for toggle term use term://*toggleterm#* instead
-      vim.cmd 'autocmd! TermOpen term://* lua set_terminal_keymaps()'
-
-      require('toggleterm').setup {
-        -- size = 20,
-        open_mapping = [[<c-\>]],
-        -- hide_numbers = true,
-        -- shade_filetypes = {},
-        -- shade_terminals = true,
-        -- shading_factor = '<number>',
-        -- start_in_insert = true,
-        -- insert_mappings = true,
-        direction = 'float',
-      }
-    end,
-  },
-  {
-    'vim-test/vim-test',
-    dependencies = {
-      'tpope/vim-dispatch',
-    },
-    config = function()
-      vim.keymap.set('n', '<leader>T', ':TestFile<CR>', { desc = 'Test [T]est' })
-      vim.keymap.set('n', '<leader>tn', ':TestNearest<CR>', { desc = 'Test [N]earest' }) -- NO!
-      vim.keymap.set('n', '<leader>l', ':TestLast<CR>', { desc = 'Test [L]ast' })
-      -- vim.keymap.set('n', '<leader>a', ':TestSuite<CR>', { desc = 'Test [S]uite' })
-      vim.keymap.set('n', '<leader>g', ':TestVisit<CR>', { desc = 'Test [V]isit' })
-      vim.g['test#strategy'] = 'toggleterm'
-      vim.g['test#python#pytest#executable'] = 'uv run pytest -s --disable-warnings'
-      vim.g['slimux_select_from_current_window'] = 1
     end,
   },
 
