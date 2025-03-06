@@ -196,6 +196,7 @@ vim.keymap.set('n', '<leader>2', ':set ts=2 sw=2 expandtab<Enter>', { desc = 'Se
 vim.keymap.set('n', '<leader>4', ':set ts=4 sw=4 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 4' })
 
 -- nmap <silent> <Leader>d :execute "tabe+" . line(".") . " %"<CR>gT
+-- TODO: change this back to <leader>d if we can get on standard function keys for debugging
 vim.keymap.set('n', '<leader>f', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = 'Open [F]ile in new tab at location' })
 
 -- [[ Basic Autocommands ]]
@@ -873,7 +874,6 @@ require('lazy').setup({
       { 'williamboman/mason.nvim', opts = {} },
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
-      'ray-x/lsp_signature.nvim', -- (BG) Adds method signatures as you type
 
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
@@ -1018,8 +1018,6 @@ require('lazy').setup({
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
             end, '[T]oggle Inlay [H]ints')
           end
-
-          require('lsp_signature').on_attach({}, event.buf)
         end,
       })
 
@@ -1177,6 +1175,7 @@ require('lazy').setup({
     cmd = { 'ConformInfo' },
     keys = {
       {
+        -- TODO: change this back to <leader>f if we can move to standard function keys for debugging
         '<leader>F',
         function()
           require('conform').format { async = true, lsp_format = 'fallback' }
