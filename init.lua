@@ -1233,11 +1233,45 @@ require('lazy').setup({
     'folke/tokyonight.nvim',
     priority = 1000, -- Make sure to load this before all the other start plugins.
     config = function()
+      local util = require 'tokyonight.util'
       ---@diagnostic disable-next-line: missing-fields
       require('tokyonight').setup {
         styles = {
           comments = { italic = false }, -- Disable italics in comments
         },
+        -- Override the default styles for the colorscheme here
+        --  See `:help tokyonight` for more information
+        --  See https://github.com/folke/tokyonight.nvim/blob/main/extras/lua/tokyonight_night.lua
+        --  for names of highlight groups.
+        on_highlights = function(hl, c)
+          -- hl.TabLine = {
+          --   fg = util.lighten(hl.TabLine.fg, 0.5),
+          -- }
+          hl.LineNr = {
+            fg = util.lighten(hl.LineNr.fg, 0.5),
+          }
+          hl.LineNrAbove = {
+            fg = util.lighten(hl.LineNrAbove.fg, 0.5),
+          }
+          hl.LineNrBelow = {
+            fg = util.lighten(hl.LineNrBelow.fg, 0.5),
+          }
+          hl.Comment = {
+            fg = util.lighten(hl.Comment.fg, 0.75),
+          }
+          hl.FoldColumn = {
+            fg = util.lighten(hl.FoldColumn.fg, 0.5),
+          }
+          -- hl.GitSignsAdd = {
+          --   fg = util.lighten(hl.GitSignsAdd.fg, 0.5),
+          -- }
+          -- hl.GitSignsChange = {
+          --   fg = util.lighten(hl.GitSignsChange.fg, 0.5),
+          -- }
+          -- hl.GitSignsDelete = {
+          --   fg = util.lighten(hl.GitSignsDelete.fg, 0.5),
+          -- }
+        end,
       }
 
       -- Load the colorscheme here.
