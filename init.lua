@@ -195,9 +195,7 @@ vim.keymap.set('n', '<leader>v', '<C-w>v', { desc = 'Split window [V]ertically' 
 vim.keymap.set('n', '<leader>2', ':set ts=2 sw=2 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 2' })
 vim.keymap.set('n', '<leader>4', ':set ts=4 sw=4 expandtab<Enter>', { desc = 'Set tabstop, shiftwidth to 4' })
 
--- nmap <silent> <Leader>d :execute "tabe+" . line(".") . " %"<CR>gT
--- TODO: change this back to <leader>d if we can get on standard function keys for debugging
-vim.keymap.set('n', '<leader>f', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = 'Open [F]ile in new tab at location' })
+vim.keymap.set('n', '<leader>d', ':execute "tabe+" .. line(".") .. " %"<CR>gT', { desc = '[D]uplicate file in new tab at location' })
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -738,118 +736,6 @@ require('lazy').setup({
       end, { desc = '[S]earch [N]eovim files' })
     end,
   },
-  {
-    'rcarriga/nvim-dap-ui',
-    dependencies = {
-      'mfussenegger/nvim-dap',
-      'mfussenegger/nvim-dap-python',
-      'nvim-neotest/nvim-nio',
-    },
-    config = function()
-      local dap, dapui = require 'dap', require 'dapui'
-      dap.listeners.before.attach.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.launch.dapui_config = function()
-        dapui.open()
-      end
-      dap.listeners.before.event_terminated.dapui_config = function()
-        dapui.close()
-      end
-      dap.listeners.before.event_exited.dapui_config = function()
-        dapui.close()
-      end
-      dap.listeners.before.event_stopped.dapui_config = function()
-        dapui.open()
-      end
-
-      dapui.setup {
-        -- Set icons to characters that are more likely to work in every terminal.
-        --    Feel free to remove or use ones that you like more! :)
-        --    Don't feel like these are good choices.
-        icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
-        controls = {
-          icons = {
-            pause = '⏸',
-            play = '▶',
-            step_into = '⏎',
-            step_over = '⏭',
-            step_out = '⏮',
-            step_back = 'b',
-            run_last = '▶▶',
-            terminate = '⏹',
-            disconnect = '⏏',
-          },
-        },
-      }
-      -- TODO: nvim-dap-ui README calls for using nvim-neotext/nvim-nio
-
-      vim.fn.sign_define('DapBreakpoint', { text = '📍', texthl = '', linehl = '', numhl = '' })
-      vim.fn.sign_define('DapStopped', { text = '⚠️', texthl = '', linehl = '', numhl = '' })
-
-      vim.keymap.set('n', '<leader>dc', dap.continue, { desc = '[D]ebug [C]ontinue' })
-      -- vim.keymap.set('n', '<leader>dq', dapui.setup, { desc = '[D]ebug [Q]uit' })
-      vim.keymap.set('n', '<leader>dq', dap.disconnect, { desc = '[D]ebug [Q]uit' })
-      vim.keymap.set('n', '<leader>ds', dap.step_over, { desc = '[D]ebug [S]tep Over' })
-      vim.keymap.set('n', '<leader>di', dap.step_into, { desc = '[D]ebug [I]nto' })
-      vim.keymap.set('n', '<leader>db', dap.toggle_breakpoint, { desc = '[D]ebug [B]reakpoint' })
-      vim.keymap.set('n', '<leader>do', dap.step_out, { desc = '[D]ebug [O]ut' })
-      vim.keymap.set('n', '<leader>dr', dap.run_to_cursor, { desc = '[D]ebug [R]un to cursor' })
-      vim.keymap.set('n', '<leader>du', dapui.toggle, { desc = '[D]ebug [U]I Toggle' })
-      -- In normal mode and visual mode map <<leader>d e to dapui eval
-      vim.keymap.set('n', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
-      vim.keymap.set('v', '<leader>de', dapui.eval, { desc = '[D]ebug [E]val' })
-      vim.keymap.set('n', '<leader>dt', require('dap-python').test_method, { desc = '[D]ebug python [T]est function' })
-      vim.keymap.set('n', '<leader>dp', function()
-        require('dap.ui.widgets').preview()
-      end, { desc = '[D]ebug [P]review' })
-      vim.keymap.set('n', '<leader>dh', function()
-        require('dap.ui.widgets').hover()
-      end, { desc = '[D]ebug [H]over' })
-
-      local local_dap_config = vim.fn.getcwd() .. '/.nvim/dap.lua'
-
-      -- Setup DAP config per project directory using <ROOT>/.nvim/dap.lua.
-      -- Example ruby setup:
-      -- In <ROOT>/.nvim/dap.lua:
-      -- ```lua`
-      -- local dap = require("dap")
-      --
-      -- -- Ruby debugging requires `Gem install debug`; (installed with Rails by default)
-      -- dap.adapters.ruby = function(on_config, config)
-      --   on_config({
-      --     type = "pipe",
-      --     pipe = config.pipe,
-      --   })
-      -- end
-      --
-      -- dap.configurations.ruby = {
-      --   {
-      --     type = "ruby",
-      --     request = "attach",
-      --     name = "Debug Sidekiq",
-      --     pipe = vim.fn.getcwd() .. "/tmp/sidekiq_debug.sock",
-      --   },
-      --   {
-      --     type = "ruby",
-      --     request = "attach",
-      --     name = "Debug Puma",
-      --     pipe = vim.fn.getcwd() .. "/tmp/puma_debug.sock",
-      --   },
-      -- }
-      -- ```
-      -- In Procfile.debug:
-      -- ```
-      -- web: bin/rdbg -n -O --sock-path ./tmp/puma_debug.sock -c -- bundle exec puma -C config/puma.rb -p 3000
-      -- jobs: bin/rdbg -n -O --sock-path ./tmp/sidekiq_debug.sock -c -- bundle exec sidekiq -C config/sidekiq.yml
-      -- ```
-
-      if vim.fn.filereadable(local_dap_config) == 1 then
-        -- vim.notify('Sourcing local DAP config: ' .. local_dap_config, 'info')
-        dofile(local_dap_config)
-      end
-    end,
-  },
 
   -- LSP Plugins
   {
@@ -1069,7 +955,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- To use the proper venv, requires a pyrightconfig.json in the root of the project looking something like:
+        -- To use a venv not in the project root, us a pyrightconfig.json in the root of the project looking something like:
         -- {
         --   "venvPath": "/Users/bgladwell/.pyenv/versions/",
         --   "venv": "astrology"
@@ -1357,7 +1243,7 @@ require('lazy').setup({
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      vim.cmd.colorscheme 'tokyonight-moon'
     end,
   },
 
@@ -1455,7 +1341,7 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.debug',
   require 'kickstart.plugins.indent_line',
   require 'kickstart.plugins.lint',
   require 'kickstart.plugins.autopairs',
