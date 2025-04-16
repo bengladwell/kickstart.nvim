@@ -1078,6 +1078,8 @@ require('lazy').setup({
         -- be better to be explicit about which language server features we want for one or both.
         --
         -- After upgrading ruby version, be sure to: `gem install solargraph solargraph-rails ruby-lsp rubocop`
+        --
+        -- Upgrade existing gems with `gem update solargraph solargraph-rails ruby-lsp rubocop`
 
         ruby_lsp = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
@@ -1098,6 +1100,12 @@ require('lazy').setup({
         },
         rubocop = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/rubocop', '--lsp' },
+        },
+
+        -- Whenever the node version change, remember to install with
+        -- `npm install -g typescript typescript-language-server`
+        ts_ls = {
+          cmd = { 'typescript-language-server', '--stdio' },
         },
       }
 
