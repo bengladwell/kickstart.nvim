@@ -332,23 +332,6 @@ require('lazy').setup({
       end, { desc = 'Toggle [M]iniMap (recursive)' })
     end,
   },
-  { -- nvim-tree: file explorer
-    'nvim-tree/nvim-tree.lua',
-    dependencies = {
-      { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
-    },
-    config = function()
-      require('nvim-tree').setup {
-        disable_netrw = true,
-        hijack_netrw = true,
-        update_focused_file = {
-          enable = true,
-          update_cwd = true,
-        },
-      }
-      vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<Enter>', { desc = '[T]oggle [T]ree' })
-    end,
-  },
   { -- alpha-nvim: greeter page
     'goolord/alpha-nvim', -- Greeter
     dependencies = {
