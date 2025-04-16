@@ -263,13 +263,24 @@ require('lazy').setup({
     event = 'VeryLazy',
     build = 'make',
     opts = {
-      provider = 'claude',
+      provider = 'openai',
       claude = {
-        model = 'claude-3-7-sonnet-latest',
+        model = 'claude-3-5-sonnet-latest',
+        max_tokens = 8192,
+      },
+      openai = {
+        model = 'gpt-4.1',
+        max_tokens = 10000,
       },
       hints = { enabled = true },
       windows = {
         width = 50, -- default % based on available width
+      },
+      mappings = {
+        sidebar = {
+          switch_windows = '<F24><F24>', -- Disable by binding to a non-existent key
+          reverse_switch_windows = '<F23><F23>', -- Disable by binding to a non-existent key
+        },
       },
     },
     dependencies = {
