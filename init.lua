@@ -222,7 +222,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   desc = 'Highlight when yanking (copying) text',
   group = vim.api.nvim_create_augroup('kickstart-highlight-yank', { clear = true }),
   callback = function()
-    vim.hl.on_yank()
+    vim.highlight.on_yank()
   end,
 })
 
@@ -281,9 +281,9 @@ require('lazy').setup({
     event = 'VeryLazy',
     build = 'make',
     opts = {
-      provider = 'openai',
+      provider = 'claude',
       claude = {
-        model = 'claude-3-5-sonnet-latest',
+        model = 'claude-sonnet-4-0',
         max_tokens = 8192,
       },
       openai = {
@@ -1473,7 +1473,7 @@ require('lazy').setup({
   --    This is the easiest way to modularize your config.
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins' },
   --
   -- For additional information with loading, sourcing and examples see `:help lazy.nvim-🔌-plugin-spec`
   -- Or use telescope!
