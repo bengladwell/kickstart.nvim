@@ -282,7 +282,7 @@ require('lazy').setup({
     event = 'VeryLazy',
     build = 'make',
     opts = {
-      provider = 'claude',
+      provider = 'openai',
       claude = {
         model = 'claude-sonnet-4-0',
         max_tokens = 8192,
