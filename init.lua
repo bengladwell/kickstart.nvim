@@ -276,6 +276,7 @@ require('lazy').setup({
   {
     'github/copilot.vim',
   },
+  'grafana/vim-alloy',
   {
     'yetone/avante.nvim',
     event = 'VeryLazy',
