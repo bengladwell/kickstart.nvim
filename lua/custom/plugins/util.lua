@@ -1,4 +1,5 @@
 return {
+  'tpope/vim-abolish',
   'tpope/vim-dispatch',
   { -- trouble.nvim: Diagnostics in quickfix
     'folke/trouble.nvim',

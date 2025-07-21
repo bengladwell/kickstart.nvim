@@ -266,6 +266,10 @@ vim.api.nvim_create_autocmd('FileType', {
   command = 'wincmd L',
 })
 
+vim.keymap.set('n', '<leader>yf', function()
+  vim.fn.setreg('+', vim.fn.expand '%') -- copy to system clipboard
+end, { desc = '[Y]ank [F]ile path to clipboard' })
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -790,6 +794,13 @@ require('lazy').setup({
 
         ruby_lsp = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
+          init_options = {
+            addonSettings = {
+              ['Ruby LSP Rails'] = {
+                enablePendingMigrationsPrompt = false,
+              },
+            },
+          },
         },
         solargraph = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/solargraph', 'stdio' },
