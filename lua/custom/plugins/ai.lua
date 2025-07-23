@@ -8,7 +8,9 @@ return {
       provider = 'openai',
       claude = {
         model = 'claude-sonnet-4-0',
-        max_tokens = 8192,
+        extra_request_body = {
+          max_tokens = 8192,
+        },
       },
       openai = {
         model = 'gpt-4.1',

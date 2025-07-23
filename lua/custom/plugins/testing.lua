@@ -18,3 +18,10 @@ return {
     end,
   },
 }
+
+-- Add the following to ~/.config/nvim/after/compiler/rspec.vim for better RSpec quickfix parsing:
+-- if exists('current_compiler') && current_compiler ==# 'rspec'
+--   setlocal errorformat=
+--     \\ \ \ \ \ %\\+\#\ %f:%l:%m,
+--     \%f:%l:\ %tarning:\ %m,
+-- endif
