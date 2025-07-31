@@ -6,15 +6,17 @@ return {
     build = 'make',
     opts = {
       provider = 'openai',
-      claude = {
-        model = 'claude-sonnet-4-0',
-        extra_request_body = {
-          max_tokens = 8192,
+      providers = {
+        claude = {
+          model = 'claude-sonnet-4-0',
+          extra_request_body = {
+            max_tokens = 8192,
+          },
         },
-      },
-      openai = {
-        model = 'gpt-4.1',
-        max_tokens = 10000,
+        openai = {
+          model = 'gpt-4.1',
+          max_tokens = 10000,
+        },
       },
       hints = { enabled = true },
       windows = {

@@ -788,9 +788,9 @@ require('lazy').setup({
         -- ruby_lsp precedes solargraph because we want nvim to try to use it first. If possible, it would probably
         -- be better to be explicit about which language server features we want for one or both.
         --
-        -- After upgrading ruby version, be sure to: `gem install solargraph solargraph-rails ruby-lsp rubocop`
+        -- After upgrading ruby version, be sure to: `gem install solargraph solargraph-rails ruby-lsp rubocop rubocop-rspec`
         --
-        -- Upgrade existing gems with `gem update solargraph solargraph-rails ruby-lsp rubocop`
+        -- Upgrade existing gems with `gem update solargraph solargraph-rails ruby-lsp rubocop rubocop-rspec`
 
         ruby_lsp = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
