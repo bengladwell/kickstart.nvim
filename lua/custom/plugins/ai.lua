@@ -14,8 +14,11 @@ return {
           },
         },
         openai = {
-          model = 'gpt-4.1',
+          model = 'gpt-5',
           max_tokens = 10000,
+          extra_request_body = {
+            temperature = 1,
+          },
         },
       },
       hints = { enabled = true },

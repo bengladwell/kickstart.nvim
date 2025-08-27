@@ -68,8 +68,8 @@ return {
       map('n', '<A-,>', ':BufferLineCyclePrev<CR>', opts)
       map('n', '<A-.>', ':BufferLineCycleNext<CR>', opts)
       -- Re-order to previous/next
-      map('n', '<A-h>', ':BufferLineMovePrev<CR>', opts)
-      map('n', '<A-l>', ':BufferLineMoveNext<CR>', opts)
+      map('n', '<A-Left>', ':BufferLineMovePrev<CR>', opts)
+      map('n', '<A-Right>', ':BufferLineMoveNext<CR>', opts)
       map('n', '<leader>p', ':BufferLinePick<CR>', opts)
     end,
   },
