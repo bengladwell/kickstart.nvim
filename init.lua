@@ -781,16 +781,13 @@ require('lazy').setup({
         },
 
         -- Mason installs gems using the global ruby version, which causes problems.
-        -- Instead, manually install solargraph, ruby_lsp, and rubocop with
-        -- `gem install solargraph solargraph-rails ruby-lsp rubocop` and configure with
+        -- Instead, manually install ruby_lsp and rubocop with
+        -- `gem install ruby-lsp rubocop` and configure with
         -- `cmd = { os.getenv 'HOME' .. './rbenv/shims/<executable> }`.
         --
-        -- ruby_lsp precedes solargraph because we want nvim to try to use it first. If possible, it would probably
-        -- be better to be explicit about which language server features we want for one or both.
+        -- After upgrading ruby version, be sure to: `gem install ruby-lsp rubocop rubocop-rspec`
         --
-        -- After upgrading ruby version, be sure to: `gem install solargraph solargraph-rails ruby-lsp rubocop rubocop-rspec`
-        --
-        -- Upgrade existing gems with `gem update solargraph solargraph-rails ruby-lsp rubocop rubocop-rspec`
+        -- Upgrade existing gems with `gem update ruby-lsp rubocop rubocop-rspec`
 
         ruby_lsp = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/ruby-lsp' },
@@ -801,20 +798,6 @@ require('lazy').setup({
               },
             },
           },
-        },
-        solargraph = {
-          cmd = { os.getenv 'HOME' .. '/.rbenv/shims/solargraph', 'stdio' },
-          --   settings = {
-          --     solargraph = {
-          --       autouormat = true,
-          --       completion = true,
-          --       diagnostic = true,
-          --       folding = true,
-          --       references = true,
-          --       rename = true,
-          --       symbols = true,
-          --     },
-          --   },
         },
         rubocop = {
           cmd = { os.getenv 'HOME' .. '/.rbenv/shims/rubocop', '--lsp' },
