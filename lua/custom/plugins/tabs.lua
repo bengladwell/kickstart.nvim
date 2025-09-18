@@ -60,6 +60,12 @@ return {
               },
             },
           },
+          custom_filter = function(buf_number, buf_numbers)
+            if vim.bo[buf_number].buftype == 'quickfix' then
+              return false
+            end
+            return true
+          end,
         },
       }
       local map = vim.api.nvim_set_keymap
