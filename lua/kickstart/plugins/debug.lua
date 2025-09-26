@@ -167,47 +167,77 @@ return {
     -- local dap = require("dap")
     --
     -- dap.adapters.ruby = function(on_config, config)
-    -- 	on_config({
-    -- 		type = "pipe",
-    -- 		pipe = config.pipe,
-    -- 	})
+    --   on_config({
+    --     type = "pipe",
+    --     pipe = config.pipe,
+    --   })
     -- end
     --
     -- dap.adapters.rspec_at_line = function(on_config, config)
-    -- 	on_config({
-    -- 		type = "pipe",
-    -- 		pipe = "${pipe}",
-    -- 		executable = {
-    -- 			command = "rdbg",
-    -- 			args = { "--open", "--sock-path", "${pipe}", "-c", "--", "bundle", "exec", "rspec", config.file },
-    -- 		},
-    -- 	})
+    --   on_config({
+    --     type = "pipe",
+    --     pipe = "${pipe}",
+    --     executable = {
+    --       command = "rdbg",
+    --       args = { "--open", "--sock-path", "${pipe}", "-c", "--", "bundle", "exec", "rspec", config.file },
+    --     },
+    --   })
+    -- end
+    --
+    -- dap.adapters.ruby_script = function(on_config, config)
+    --   on_config({
+    --     type = "pipe",
+    --     pipe = "${pipe}",
+    --     executable = {
+    --       command = "rdbg",
+    --       args = { "--open", "--sock-path", "${pipe}", "-c", "--", "ruby", config.program },
+    --     },
+    --   })
     -- end
     --
     -- dap.configurations.ruby = {
-    -- 	{
-    -- 		type = "ruby",
-    -- 		request = "attach",
-    -- 		name = "Debug Sidekiq",
-    -- 		pipe = vim.fn.getcwd() .. "/tmp/sidekiq_debug.sock",
-    -- 	},
-    -- 	{
-    -- 		type = "ruby",
-    -- 		request = "attach",
-    -- 		name = "Debug Puma",
-    -- 		pipe = vim.fn.getcwd() .. "/tmp/puma_debug.sock",
-    -- 	},
-    -- 	{
-    -- 		type = "rspec_at_line",
-    -- 		name = "Test At Line",
-    -- 		request = "launch",
-    -- 		file = function()
-    -- 			local file_path = vim.fn.expand("%:p")
-    -- 			local current_line = vim.fn.line(".")
-    -- 			return file_path .. ":" .. current_line
-    -- 		end,
-    -- 	},
+    --   {
+    --     type = "ruby",
+    --     request = "attach",
+    --     name = "Debug Puma",
+    --     pipe = vim.fn.getcwd() .. "/tmp/puma_debug.sock",
+    --   },
+    --   {
+    --     type = "ruby",
+    --     request = "attach",
+    --     name = "Debug Sidekiq",
+    --     pipe = vim.fn.getcwd() .. "/tmp/sidekiq_debug.sock",
+    --   },
+    --   {
+    --     type = "rspec_at_line",
+    --     name = "Test At Line",
+    --     request = "launch",
+    --     file = function()
+    --       local file_path = vim.fn.expand("%:p")
+    --       local current_line = vim.fn.line(".")
+    --       return file_path .. ":" .. current_line
+    --     end,
+    --   },
+    --   {
+    --     type = "ruby_script",
+    --     name = "Run Current Buffer",
+    --     program = "${file}",
+    --     request = "launch",
+    --     console = "integratedTerminal",
+    --   },
     -- }
+    --
+    -- -- Make the function global so it can be called from the keymap
+    -- _G.debug_rspec = function()
+    --   for _, config in pairs(dap.configurations.ruby) do
+    --     if config.name == "Test At Line" then
+    --       dap.run(config)
+    --       return
+    --     end
+    --   end
+    -- end
+    --
+    -- vim.api.nvim_set_keymap("n", "<leader>td", "<cmd>lua debug_rspec()<CR>", { noremap = true, silent = true })
     -- ```
     -- In Procfile.debug:
     -- ```
@@ -221,31 +251,39 @@ return {
     -- local dap = require("dap")
     -- require("dap-python").setup("uv")
     --
+    -- -- Common configuration for Python debug configurations
+    -- local common_config = {
+    --   type = "python",
+    --   request = "launch",
+    --   -- python = { os.getenv("HOME") .. "/dev/spx/astrology/.venv/bin/python", "-Xfrozen_modules=off" },
+    --   env = {
+    --     DOPPLER_ENV = "1",
+    --     DATABASE_PORT = "5432",
+    --     ASTROLOGY_PORT = "8001",
+    --     ASTROLOGY_REDIS_URL = "redis://localhost:6379/2",
+    --     ASTROLOGY_STORAGE_PATH = "/Users/bgladwell/dev/spx/rcis-workspace/storage",
+    --     ASTROLOGY_PIDS_PATH = "/Users/bgladwell/dev/spx/rcis-workspace/tmp/pids",
+    --   },
+    --   justMyCode = false,
+    --   console = "integratedTerminal",
+    -- }
+    --
     -- dap.configurations.python = {
-    --   {
-    --     type = "python",
-    --     request = "launch",
+    --   vim.tbl_deep_extend("force", common_config, {
     --     name = "Debug FastAPI",
     --     code = "from app.main import dev_start; dev_start()",
-    --     -- python = { os.getenv("HOME") .. "/dev/spx/astrology/.venv/bin/python", "-Xfrozen_modules=off" },
-    --     env = {
-    --       DOPPLER_ENV = "1",
-    --     },
-    --     justMyCode = false,
-    --     console = "integratedTerminal",
-    --   },
-    --   {
-    --     type = "python",
-    --     request = "launch",
+    --   }),
+    --   vim.tbl_deep_extend("force", common_config, {
     --     name = "Debug Dramatiq",
     --     code = "from app.dramatiq.worker import dev_start; dev_start()",
-    --     -- python = { os.getenv("HOME") .. "/dev/spx/astrology/.venv/bin/python", "-Xfrozen_modules=off" },
-    --     env = {
-    --       DOPPLER_ENV = "1",
-    --     },
-    --     justMyCode = false,
+    --   }),
+    --   vim.tbl_deep_extend("force", common_config, {
+    --     name = "Run Current Buffer",
+    --     program = "${file}",
+    --     request = "launch",
+    --     type = "python",
     --     console = "integratedTerminal",
-    --   },
+    --   }),
     -- }
     -- ````
 
